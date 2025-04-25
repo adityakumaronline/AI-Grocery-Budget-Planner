@@ -1,0 +1,789 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SavvyCart - AI Grocery Assistant</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    :root {
+      --primary: #5cb85c;
+      --primary-dark: #4cae4c;
+      --secondary: #f8f9fa;
+      --dark: #343a40;
+      --light: #f9f9f9;
+      --gray: #6c757d;
+      --shadow: 0 4px 12px rgba(0,0,0,0.1);
+      --radius: 12px;
+    }
+    
+    * { 
+      box-sizing: border-box; 
+      margin: 0; 
+      padding: 0; 
+    }
+    
+    body { 
+      font-family: 'Segoe UI', system-ui, sans-serif; 
+      background: var(--light); 
+      color: var(--dark);
+      line-height: 1.6;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+    
+    /* Header Styles */
+    header {
+      background: white;
+      box-shadow: var(--shadow);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    
+    .navbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem 2rem;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-weight: 700;
+      font-size: 1.5rem;
+      color: var(--primary);
+      text-decoration: none;
+    }
+    
+    .logo i {
+      font-size: 1.8rem;
+    }
+    
+    .nav-links {
+      display: flex;
+      gap: 1.5rem;
+    }
+    
+    .nav-links a {
+      color: var(--dark);
+      text-decoration: none;
+      font-weight: 500;
+      transition: color 0.3s;
+    }
+    
+    .nav-links a:hover {
+      color: var(--primary);
+    }
+    
+    /* Hero Section */
+    .hero {
+      background: linear-gradient(135deg, rgba(92,184,92,0.1), rgba(76,174,76,0.2));
+      padding: 3rem 2rem;
+      text-align: center;
+    }
+    
+    .hero h1 {
+      font-size: 2.5rem;
+      margin-bottom: 1rem;
+      color: var(--dark);
+    }
+    
+    .hero p {
+      font-size: 1.2rem;
+      color: var(--gray);
+      max-width: 700px;
+      margin: 0 auto 2rem;
+    }
+    
+    /* Main Content */
+    main {
+      flex: 1;
+      max-width: 700px; /* Adjusted for centered chat */
+      width: 100%;
+      margin: 2rem auto;
+      padding: 0 2rem;
+    }
+    
+    .container {
+      display: flex;
+      justify-content: center; /* Center the chat container */
+    }
+    
+    .chat-container {
+      width: 100%;
+      max-width: 600px; /* Limit width for better readability */
+      background: white;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      height: 65vh;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .chat-header {
+      background: var(--primary);
+      color: white;
+      padding: 1rem;
+      text-align: center;
+      font-weight: bold;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+    }
+    
+    .chat-messages {
+      flex: 1;
+      padding: 1rem;
+      overflow-y: auto;
+      background: url('https://www.transparenttextures.com/patterns/food.png');
+    }
+    
+    .message {
+      max-width: 80%;
+      padding: 0.8rem 1rem;
+      margin-bottom: 1rem;
+      border-radius: 1rem;
+      animation: fadeIn 0.3s;
+      position: relative;
+    }
+    
+    .bot-message {
+      background: white;
+      color: var(--dark);
+      border-bottom-left-radius: 0.25rem;
+      align-self: flex-start;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      border: 1px solid #eee;
+    }
+    
+    .bot-message::before {
+      content: "";
+      position: absolute;
+      left: -8px;
+      top: 0;
+      width: 0;
+      height: 0;
+      border: 8px solid transparent;
+      border-right-color: white;
+      border-left: 0;
+    }
+    
+    .user-message {
+      background: var(--primary);
+      color: white;
+      border-bottom-right-radius: 0.25rem;
+      margin-left: auto;
+    }
+    
+    .user-message::after {
+      content: "";
+      position: absolute;
+      right: -8px;
+      top: 0;
+      width: 0;
+      height: 0;
+      border: 8px solid transparent;
+      border-left-color: var(--primary);
+      border-right: 0;
+    }
+    
+    .chat-input {
+      display: flex;
+      padding: 1rem;
+      border-top: 1px solid #eee;
+      background: white;
+    }
+    
+    #user-input {
+      flex: 1;
+      padding: 0.8rem 1rem;
+      border: 1px solid #ddd;
+      border-radius: 2rem;
+      outline: none;
+      font-size: 1rem;
+    }
+    
+    #send-btn {
+      background: var(--primary);
+      color: white;
+      border: none;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      margin-left: 0.5rem;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+    
+    #send-btn:hover {
+      background: var(--primary-dark);
+      transform: scale(1.05);
+    }
+    
+    .typing {
+      display: flex;
+      padding: 0.5rem;
+    }
+    
+    .typing span {
+      width: 8px;
+      height: 8px;
+      background: var(--gray);
+      border-radius: 50%;
+      margin: 0 2px;
+      animation: bounce 1s infinite;
+    }
+    
+    .typing span:nth-child(2) { animation-delay: 0.2s; }
+    .typing span:nth-child(3) { animation-delay: 0.4s; }
+    
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } }
+    @keyframes bounce { 
+      0%, 100% { transform: translateY(0); } 
+      50% { transform: translateY(-5px); } 
+    }
+    
+    /* Footer Styles */
+    footer {
+      background: var(--dark);
+      color: white;
+      padding: 3rem 2rem 1.5rem;
+      margin-top: auto;
+    }
+    
+    .footer-content {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 2rem;
+    }
+    
+    .footer-column h3 {
+      color: var(--primary);
+      margin-bottom: 1.5rem;
+      font-size: 1.2rem;
+    }
+    
+    .footer-column ul {
+      list-style: none;
+    }
+    
+    .footer-column li {
+      margin-bottom: 0.8rem;
+    }
+    
+    .footer-column a {
+      color: #ddd;
+      text-decoration: none;
+      transition: color 0.3s;
+    }
+    
+    .footer-column a:hover {
+      color: var(--primary);
+    }
+    
+    .social-links {
+      display: flex;
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+    
+    .social-links a {
+      color: white;
+      font-size: 1.2rem;
+    }
+    
+    .copyright {
+      text-align: center;
+      margin-top: 2rem;
+      padding-top: 1.5rem;
+      border-top: 1px solid rgba(255,255,255,0.1);
+      color: #aaa;
+      font-size: 0.9rem;
+    }
+    
+    /* Chatbase Chatbot Bubble and Iframe */
+    .chat-bubble {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: var(--primary);
+      color: white;
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      box-shadow: var(--shadow);
+      z-index: 1000;
+      transition: all 0.3s;
+    }
+    
+    .chat-bubble:hover {
+      background: var(--primary-dark);
+      transform: scale(1.1);
+    }
+    
+    .chat-bubble i {
+      font-size: 1.5rem;
+    }
+    
+    .chatbot-iframe {
+      position: fixed;
+      bottom: 100px;
+      right: 20px;
+      width: 350px;
+      height: 500px;
+      border: none;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      z-index: 999;
+      display: none; /* Hidden by default */
+    }
+    
+    /* Responsive Design */
+    @media (max-width: 768px) {
+      .hero h1 {
+        font-size: 2rem;
+      }
+      
+      .chat-container {
+        height: 60vh;
+      }
+      
+      .chatbot-iframe {
+        width: 90%;
+        right: 5%;
+        height: 400px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Header -->
+  <header>
+    <nav class="navbar">
+      <a href="#" class="logo">
+        <i class="fas fa-shopping-cart"></i>
+        <span>Your Grocery Planner</span>
+      </a>
+      <div class="nav-links">
+        <a href="#">Home</a>
+        <a href="#">Features</a>
+        <a href="#">Tips</a>
+        <a href="#">About</a>
+      </div>
+    </nav>
+  </header>
+
+  <!-- Hero Section -->
+  <section class="hero">
+    <h1>Smart Grocery Budgeting Made Easy</h1>
+    <p>Get personalized shopping advice, meal planning tips, and budget optimization from our AI assistant</p>
+  </section>
+
+  <!-- Main Content -->
+  <main>
+    <div class="container">
+      <!-- Chat Container (Centered) -->
+      <div class="chat-container">
+        <div class="chat-header">
+          <i class="fas fa-robot"></i>
+          <span>Grocery Budget Assistant</span>
+        </div>
+        <div class="chat-messages" id="chat-messages"></div>
+        <div class="chat-input">
+          <input type="text" id="user-input" placeholder="Ask about grocery budgeting..." autofocus>
+          <button id="send-btn"><i class="fas fa-paper-plane"></i></button>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer>
+    <div class="footer-content">
+      <div class="footer-column">
+        <h3>SavvyCart</h3>
+        <p>Your AI-powered grocery budgeting assistant helping families save money and eat better from 2025.</p>
+        <div class="social-links">
+          <a href="#"><i class="fab fa-facebook"></i></a>
+          <a href="#"><i class="fab fa-twitter"></i></a>
+          <a href="#"><i class="fab fa-instagram"></i></a>
+          <a href="#"><i class="fab fa-pinterest"></i></a>
+        </div>
+      </div>
+      
+      <div class="footer-column">
+        <h3>Quick Links</h3>
+        <ul>
+          <li><a href="#">Home</a></li>
+          <li><a href="#">Features</a></li>
+          <li><a href="#">Budget Calculator</a></li>
+          <li><a href="#">Meal Planner</a></li>
+        </ul>
+      </div>
+      
+      <div class="footer-column">
+        <h3>Resources</h3>
+        <ul>
+          <li><a href="#">Grocery Guides</a></li>
+          <li><a href="#">Seasonal Calendar</a></li>
+          <li><a href="#">Coupon Database</a></li>
+          <li><a href="#">Price Tracker</a></li>
+        </ul>
+      </div>
+      
+      <div class="footer-column">
+        <h3>Company</h3>
+        <ul>
+          <li><a href="#">About Us</a></li>
+          <li><a href="#">Privacy Policy</a></li>
+          <li><a href="#">Terms of Service</a></li>
+          <li><a href="#">Contact</a></li>
+        </ul>
+      </div>
+    </div>
+    
+    <div class="copyright">
+      © 2025 Your Budget Planner. All rights reserved.
+    </div>
+  </footer>
+
+  <!-- Chatbase Chatbot Bubble and Iframe -->
+  <div class="chat-bubble" id="chat-bubble">
+    <i class="fas fa-comment-dots"></i>
+  </div>
+  <iframe
+    id="chatbot-iframe"
+    class="chatbot-iframe"
+    src="https://www.chatbase.co/chatbot-iframe/-CehYCBSPCEQ4mgLbUI8p"
+    frameborder="0"
+  ></iframe>
+
+  <script>
+    const chat = document.getElementById('chat-messages');
+    const input = document.getElementById('user-input');
+
+    // Conversation state
+    let lastTopic = null;
+    let lastResponse = null;
+    let budgetState = null;
+    let budgetData = {
+      familyMembers: null,
+      days: null,
+      budget: null,
+      foodPreference: null
+    };
+
+    // DeepSeek API configuration
+    const DEEPSEEK_API_KEY = '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';
+    const API_ENDPOINT = 'https://openrouter.ai/api/v1/chat/completions';
+
+    // Initial bot greeting
+    setTimeout(() => {
+      addMessage("Hi there! 👋 I'm your AI Grocery budget planner assistant. I can help with grocery budgeting, meal planning, and finding savings. Ask me anything about smart shopping!", 'bot');
+    }, 800);
+
+    // Send message on button click or Enter key
+    document.getElementById('send-btn').addEventListener('click', sendMessage);
+    input.addEventListener('keypress', (e) => e.key === 'Enter' && sendMessage());
+
+    function sendMessage() {
+      const message = input.value.trim();
+      if (!message) return;
+
+      addMessage(message, 'user');
+      input.value = '';
+      showTyping();
+
+      setTimeout(() => {
+        respondToMessage(message);
+      }, 800);
+    }
+
+    function addMessage(text, sender) {
+      const msgDiv = document.createElement('div');
+      msgDiv.className = `message ${sender}-message`;
+      msgDiv.textContent = text;
+      chat.appendChild(msgDiv);
+      chat.scrollTop = chat.scrollHeight;
+    }
+
+    function showTyping() {
+      const typingDiv = document.createElement('div');
+      typingDiv.className = 'message bot-message typing';
+      typingDiv.innerHTML = '<span></span><span></span><span></span>';
+      chat.appendChild(typingDiv);
+      chat.scrollTop = chat.scrollHeight;
+      return typingDiv;
+    }
+
+    // Send message to DeepSeek API
+    async function queryDeepSeek(message) {
+      const typing = document.querySelector('.typing');
+      if (typing) chat.removeChild(typing);
+
+      try {
+        const response = await fetch(API_ENDPOINT, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${DEEPSEEK_API_KEY}`
+          },
+          body: JSON.stringify({
+            model: "deepseek/deepseek-r1:free",
+            messages: [{ role: "user", content: `Provide a concise answer related to grocery shopping, budgeting, or meal planning in Indian Rupees (₹) for this query: ${message}` }],
+          })
+        });
+
+        if (!response.ok) {
+          throw new Error(`API request failed with status ${response.status}`);
+        }
+
+        const data = await response.json();
+        if (data.choices && data.choices[0].message) {
+          return data.choices[0].message.content;
+        } else {
+          return "Sorry, I couldn't find an answer. Please try rephrasing your question.";
+        }
+      } catch (error) {
+        console.error('Error calling DeepSeek API:', error);
+        return "Sorry, I'm having trouble connecting to the server. Please try again later.";
+      }
+    }
+
+    function respondToMessage(message) {
+      const msg = message.toLowerCase();
+      const typing = document.querySelector('.typing');
+      if (typing) chat.removeChild(typing);
+
+      // Check if in budget planning conversation
+      if (budgetState) {
+        handleBudgetConversation(message);
+        return;
+      }
+
+      // Check if user wants more details
+      if (/more|detail|expand|elaborate/i.test(msg) && lastTopic) {
+        addMessage(getDetailedResponse(lastTopic), 'bot');
+        return;
+      }
+
+      // Handle new questions
+      let response = "";
+      if (/hello|hi|hey/i.test(msg)) {
+        response = "Hello! I'm your grocery budgeting assistant. I can help with meal planning, saving strategies, and budget optimization. What would you like to know?";
+        lastTopic = "greeting";
+      }
+      else if (/budget allocation|budget plan|allocate budget/i.test(msg)) {
+        budgetState = "askFamilyMembers";
+        response = "I can help create a detailed budget plan. First, how many family members are you shopping for?";
+      }
+      else if (/budget|spend|money/i.test(msg)) {
+        response = "For a family of 4, aim for ₹3000-₹4000 weekly. Allocate:\n- 40% proteins (meat, dairy, beans)\n- 30% produce\n- 20% grains/pantry\n- 10% snacks\n\nWant more specific advice?";
+        lastTopic = "budget";
+      }
+      else if (/save|cheap|low cost/i.test(msg)) {
+        response = "Top 5 ways to save:\n1. Buy store brands (save 20-30%)\n2. Shop seasonal produce\n3. Use loyalty programs\n4. Cook at home 5+ days/week\n5. Buy bulk non-perishables";
+        lastTopic = "saving";
+      }
+      else if (/meal plan|weekly meals/i.test(msg)) {
+        response = "Sample weekly plan (₹2000 budget):\nMon: Veggie stir-fry (₹320)\nTue: Pasta with sauce (₹240)\nWed: Bean chili (₹280)\nThu: Chicken & rice (₹400)\nFri: Leftovers\nSat: Homemade pizza (₹480)\nSun: Soup & bread (₹280)";
+        lastTopic = "mealplan";
+      }
+      else if (/recipe|meal idea|dinner/i.test(msg)) {
+        const lentilSoupCostINR = 8 * 83;
+        const lentilsCostINR = 1.50 * 83;
+        const carrotsCostINR = 0.50 * 83;
+        const onionCostINR = 0.50 * 83;
+        const garlicCostINR = 0.30 * 83;
+        const brothCostINR = 1.20 * 83;
+        const spicesCostINR = 0.50 * 83;
+        const servingCostINR = 1.33 * 83;
+
+        response = "Budget meal: Lentil Soup\nIngredients (₹320 total):\n- 1/2 kg lentils (₹60)\n- 2 carrots (₹20)\n- 1 onion (₹10)\n- 3 garlic cloves (₹5)\n- 6 cups broth (₹50)\n- Spices (₹25)\nServes 6 (₹53/serving)";
+        lastTopic = "recipe";
+      }
+      else if (/store|where to buy|shopping/i.test(msg)) {
+        response = "Best stores for savings:\n- Local Kirana stores (best for basics, can be cheaper)\n- DMart/Reliance Retail/Big Bazaar (bulk options, discounts)\n- Local Mandis (seasonal produce deals)\n- Online grocery platforms (check for offers)";
+        lastTopic = "stores";
+      }
+      else if (/organic|healthy/i.test(msg)) {
+        response = "Prioritize organic for (where available and affordable):\n- Strawberries\n- Spinach\n- Kale\n- Apples\n- Grapes\n\nConsider conventional for:\n- Avocados\n- Pineapples\n- Onions\n- Sweet corn";
+        lastTopic = "organic";
+      }
+      else if (/waste|leftover/i.test(msg)) {
+        response = "Reduce waste by:\n1. Storing produce properly (consider climate)\n2. Refrigerating leftovers promptly\n3. Planning meals around perishables\n4. Using vegetable scraps for broth\n5. Buying appropriate quantities";
+        lastTopic = "waste";
+      }
+      else if (/list|shopping list/i.test(msg)) {
+        response = "Essential shopping list:\nProteins: Dal (lentils), chana (chickpeas), paneer (Indian cheese), eggs, chicken (if non-veg)\nProduce: Potatoes, onions, tomatoes, seasonal vegetables, bananas\nGrains: Rice, atta (wheat flour), bread\nDairy: Milk, yogurt\nPantry: Cooking oil, common Indian spices, sugar, salt";
+        lastTopic = "list";
+      }
+      else {
+        // Fallback to DeepSeek API when no keywords match
+        queryDeepSeek(message).then(apiResponse => {
+          addMessage(apiResponse, 'bot');
+          lastTopic = "general";
+          lastResponse = apiResponse;
+        });
+        return; // Exit early since API call is async
+      }
+
+      lastResponse = response;
+      if (!budgetState) {
+        addMessage(response, 'bot');
+      }
+    }
+
+    function handleBudgetConversation(message) {
+      const msg = message.toLowerCase();
+
+      switch(budgetState) {
+        case "askFamilyMembers":
+          const members = parseInt(message);
+          if (isNaN(members) || members <= 0) {
+            addMessage("Please enter a valid number of family members (e.g. 4).", 'bot');
+            return;
+          }
+          budgetData.familyMembers = members;
+          budgetState = "askDays";
+          addMessage(`Great! Shopping for ${members} family members. For how many days do you need groceries?`, 'bot');
+          break;
+
+        case "askDays":
+          const days = parseInt(message);
+          if (isNaN(days) || days <= 0) {
+            addMessage("Please enter a valid number of days (e.g. 7 for one week).", 'bot');
+            return;
+          }
+          budgetData.days = days;
+          budgetState = "askBudget";
+          addMessage(`Planning for ${days} days. What is your total budget for this period in Rupees? (e.g. 1500)`, 'bot');
+          break;
+
+        case "askBudget":
+          const budget = parseFloat(message.replace(/[^0-9.]/g, ''));
+          if (isNaN(budget) || budget <= 0) {
+            addMessage("Please enter a valid budget amount in Rupees (e.g. 1500).", 'bot');
+            return;
+          }
+          budgetData.budget = budget;
+          budgetState = "askFoodPreference";
+          addMessage(`Got it! ₹${budget} for ${budgetData.days} days. Would you like veg options, non-veg options, or both?`, 'bot');
+          break;
+
+        case "askFoodPreference":
+          let preference = "both";
+          if (msg.includes('veg') && !msg.includes('non')) {
+            preference = "vegetarian";
+          } else if (msg.includes('non') || msg.includes('meat')) {
+            preference = "non-vegetarian";
+          }
+          budgetData.foodPreference = preference;
+          budgetState = null;
+          generateBudgetPlan();
+          break;
+      }
+    }
+
+    function generateBudgetPlan() {
+      const { familyMembers, days, budget, foodPreference } = budgetData;
+      const dailyBudget = (budget / days).toFixed(2);
+      const perPersonDaily = (dailyBudget / familyMembers).toFixed(2);
+
+      // Calculate allocations based on preferences (in Rupees)
+      let proteinAllocation, produceAllocation, grainsAllocation, otherAllocation;
+      let proteinExamples, mealSuggestions;
+
+      if (foodPreference === "vegetarian") {
+        proteinAllocation = budget * 0.35;
+        produceAllocation = budget * 0.35;
+        grainsAllocation = budget * 0.2;
+        otherAllocation = budget * 0.1;
+        proteinExamples = "dal (₹" + (proteinAllocation * 0.3).toFixed(0) + "), chana (₹" + (proteinAllocation * 0.3).toFixed(0) + "), paneer (₹" + (proteinAllocation * 0.4).toFixed(0) + ")";
+        mealSuggestions = "Vegetable stir-fry with roti, lentil curry with rice, chickpea masala with naan, vegetable biryani";
+      } else if (foodPreference === "non-vegetarian") {
+        proteinAllocation = budget * 0.45;
+        produceAllocation = budget * 0.3;
+        grainsAllocation = budget * 0.15;
+        otherAllocation = budget * 0.1;
+        proteinExamples = "chicken (₹" + (proteinAllocation * 0.5).toFixed(0) + "), eggs (₹" + (proteinAllocation * 0.25).toFixed(0) + "), fish (₹" + (proteinAllocation * 0.25).toFixed(0) + ")";
+        mealSuggestions = "Chicken curry with rice, egg bhurji with paratha, fish fry with vegetables, keema matar with roti";
+      } else {
+        proteinAllocation = budget * 0.4;
+        produceAllocation = budget * 0.3;
+        grainsAllocation = budget * 0.2;
+        otherAllocation = budget * 0.1;
+        proteinExamples = "dal (₹" + (proteinAllocation * 0.2).toFixed(0) + "), eggs (₹" + (proteinAllocation * 0.2).toFixed(0) + "), chicken (₹" + (proteinAllocation * 0.3).toFixed(0) + "), mixed vegetables (₹" + (proteinAllocation * 0.3).toFixed(0) + ")";
+        mealSuggestions = "Dal chawal, egg curry with roti, chicken and vegetable biryani, mixed vegetable sabzi with chapati";
+      }
+
+      const response = `Here's your personalized budget plan for ${familyMembers} people for ${days} days (₹${budget} total):
+      
+      🌿 Daily Budget: ₹${dailyBudget} (₹${perPersonDaily} per person per day)
+      
+      💰 Recommended Allocation:
+      - Proteins (${proteinExamples}): ₹${proteinAllocation.toFixed(2)} (${(proteinAllocation/budget*100).toFixed(0)}%)
+      - Fruits & Vegetables: ₹${produceAllocation.toFixed(2)} (${(produceAllocation/budget*100).toFixed(0)}%)
+      - Grains & Pantry: ₹${grainsAllocation.toFixed(2)} (${(grainsAllocation/budget*100).toFixed(0)}%)
+      - Other (snacks, etc.): ₹${otherAllocation.toFixed(2)} (${(otherAllocation/budget*100).toFixed(0)}%)
+      
+      🍽️ Meal Suggestions:
+      ${mealSuggestions}
+
+      📝 Shopping List:
+      - Proteins: ${proteinExamples} (₹${(proteinAllocation/2).toFixed(2)} fresh, ₹${(proteinAllocation/2).toFixed(2)} frozen/canned)
+      - Produce: Seasonal fruits & vegetables (focus on what's fresh and affordable)
+      - Grains: Rice, atta, bread (consider local varieties)
+      - Dairy: Milk, yogurt (if applicable)
+      - Pantry: Cooking oil, common Indian spices (turmeric, cumin, coriander, etc.), sugar, salt
+
+      💡 Tips:
+      1. Buy staples in bulk from local wholesale markets if possible
+      2. ${days > 7 ? 'Consider storing some lentils and grains for longer use' : 'Plan meals around market days for fresh produce'}
+      3. Check for discounts on ${foodPreference === 'vegetarian' ? 'pulses and seasonal vegetables' : 'poultry and fish at local markets'}`;
+
+      addMessage(response, 'bot');
+      lastTopic = "budgetPlan";
+      lastResponse = response;
+    }
+
+    function getDetailedResponse(topic) {
+      const inrExchangeRate = 83; // Approximate current INR to USD exchange rate 
+
+      const detailedResponses = {
+        "budget": `Detailed Budget Breakdown:\n\nFor a family of 4 (₹${200 * inrExchangeRate}/week):\n- Non-Veg Proteins (₹${60 * inrExchangeRate}):\n  • Chicken (1.5 kg) ₹${250}\n  • Fish (1 kg) ₹${300}\n  • Eggs (2 dozen) ₹${150}\n- Veg Proteins (₹${20 * inrExchangeRate}):\n  • Beans/lentils (1.5 kg) ₹${150}\n  • Tofu/Tempeh ₹${150}\n- Produce (₹${60 * inrExchangeRate}):\n  • Seasonal fruits ₹${500}\n  • Vegetables ₹${1000}\n  • Herbs ₹${40}\n- Grains (₹${40 * inrExchangeRate}):\n  • Rice/pasta ₹${300}\n  • Bread ₹${250}\n  • Cereal/oats ₹${450}\n- Dairy (₹${20 * inrExchangeRate}):\n  • Milk ₹${150}\n  • Cheese ₹${650}\n  • Yogurt ₹${580}`,
+        "saving": "Advanced Saving Strategies:\n\n1. Price Matching:\n- Use apps like local price comparison apps\n- Many stores will match competitors\n\n2. Timing Purchases:\n- Meat markdowns: Check local store timings\n- Produce deliveries: Check local market days\n- Bakery clearance: 1 hour before close\n\n3. Loyalty Programs:\n- Stack store coupons with manufacturer\n- Earn discounts/rewards\n- Get personalized deals",
+        "mealplan": `Complete Weekly Meal Plan (₹${100 * inrExchangeRate}):\n\nMonday: Veggie Stir-Fry (₹${8 * inrExchangeRate})\n- Rice (₹${0.50 * inrExchangeRate})\n- Mixed veggies (₹${3 * inrExchangeRate})\n- Tofu (₹${2.50 * inrExchangeRate})\n- Sauce (₹${2 * inrExchangeRate})\n\nTuesday: Chicken Curry (₹${10 * inrExchangeRate})\n- Chicken (₹${5 * inrExchangeRate})\n- Spices (₹${2 * inrExchangeRate})\n- Rice (₹${1 * inrExchangeRate})\n- Vegetables (₹${2 * inrExchangeRate})\n\nWednesday: Bean Chili (₹${7 * inrExchangeRate})\n- Beans (₹${1.50 * inrExchangeRate})\n- Tomatoes (₹${1 * inrExchangeRate})\n- Spices (₹${0.50 * inrExchangeRate})\n- Cornbread (₹${4 * inrExchangeRate})\n\nThursday-Sunday: Similar detailed plans...`,
+        "recipe": `Complete Lentil Soup Recipe:\n\nIngredients (₹${8 * inrExchangeRate}):\n- 2 cups dry lentils (₹${1 * inrExchangeRate})\n- 1 onion (₹${0.30 * inrExchangeRate})\n- 3 carrots (₹${0.60 * inrExchangeRate})\n- 3 celery stalks (₹${0.50 * inrExchangeRate})\n- 4 garlic cloves (₹${0.20 * inrExchangeRate})\n- 8 cups broth (₹${1.50 * inrExchangeRate})\n- 1 can tomatoes (₹${1 * inrExchangeRate})\n- Spices (₹${0.50 * inrExchangeRate})\n- Olive oil (₹${0.40 * inrExchangeRate})\n\nInstructions:\n1. Sauté veggies in oil\n2. Add lentils and broth\n3. Simmer 45 mins\n4. Season to taste\n\nMakes 8 servings (₹${1 * inrExchangeRate}/serving)`,
+        "stores": "Store-Specific Strategies:\n\nLocal Supermarkets/Kirana Stores:\n- Check daily/weekly offers\n- Inquire about bulk discounts\n- Be aware of seasonal produce prices\n\nReliance Retail/DMart/Big Bazaar:\n- Look for 'Lowest Price' or 'Offer Zone'\n- Use loyalty cards for discounts\n- Consider their own brand products\n\nLocal Farmers Markets (Mandi):\n- Bargain respectfully\n- Buy seasonal produce for better prices\n- Go towards the end for potential discounts",
+        "organic": "Organic Buying Guide:\n\nDIRTY DOZEN (always buy organic):\n1. Strawberries\n2. Spinach\n3. Kale\n4. Nectarines\n5. Apples\n6. Grapes\n\nCLEAN 15 (safe conventional):\n1. Avocados\n2. Sweet corn\n3. Pineapples\n4. Onions\n5. Papayas\n\nStorage Tips:\n- Wash berries in vinegar water with a pinch of salt\n- Store greens wrapped in a cloth or paper towel\n- Keep ethylene-producing fruits (like apples and bananas) separate",
+        "budgetPlan": "Want me to generate a sample shopping list or meal plan based on your budget in Rupees? Just ask!"
+      };
+
+      return detailedResponses[topic] || "I can provide more details about grocery budgeting, meal planning, or saving strategies in Rupees. What specifically would you like to know more about?";
+    }
+
+    // Toggle Chatbase chatbot iframe visibility
+    const chatBubble = document.getElementById('chat-bubble');
+    const chatbotIframe = document.getElementById('chatbot-iframe');
+    
+    chatBubble.addEventListener('click', () => {
+      chatbotIframe.style.display = chatbotIframe.style.display === 'block' ? 'none' : 'block';
+    });
+  </script>
+</body>
+</html>
